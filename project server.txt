@@ -1,0 +1,39 @@
+# raspi_signal_server.py
+import socket
+import RPi.GPIO as GPIO
+import time
+
+# 🟢 LED pin setup
+GREEN_PIN = 17
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(GREEN_PIN, GPIO.OUT)
+
+# 📡 Setup socket server
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(("0.0.0.0", 5050))  # Listen on all interfaces
+server_socket.listen(1)
+
+print("[INFO] Waiting for laptop connection...")
+conn, addr = server_socket.accept()
+print(f"[INFO] Connected to {addr}")
+
+ASDKtry:
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            break
+
+        green_time = float(data.decode())
+        print(f"[SIGNAL] Green time received: {green_time}s")
+
+        # 🟩 Turn ON LED
+        GPIO.output(GREEN_PIN, GPIO.HIGH)
+        time.sleep(green_time)
+        GPIO.output(GREEN_PIN, GPIO.LOW)
+
+except Exception as e:
+    print(f"[ERROR] {e}")
+finally:
+    conn.close()
+    server_socket.close()
+    GPIO.cleanup()
